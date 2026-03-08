@@ -141,6 +141,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - `main-parallax-screen`
 - 기본 갤러리 섹션
 - 중간 섹션
+- RSVP 섹션 기본 생성 및 기본 노출
 - 비공개 미리보기용 draft 카드
 - sample preset 교체 가능한 미리보기 상태
 
@@ -156,14 +157,14 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - draft 카드는 소유자 token으로 비공개 미리보기가 가능해야 한다.
 - Quick Draft 완료 후 즉시 카드 뷰어로 이동하거나 동일한 수준의 미리보기를 제공해야 한다.
 - draft 미리보기에서는 다른 sample preset으로 즉시 전환할 수 있어야 한다.
-- sample preset 전환 시 `edited` 상태가 아닌 기본 섹션은 새 preset 기본값으로 교체될 수 있어야 한다.
+- sample preset 전환 시 `default` 상태 섹션은 새 preset의 기본 payload, visibility, order 규칙으로 재계산될 수 있어야 한다.
+- sample preset 전환 시 `edited` 또는 `hidden` 상태 섹션은 사용자 override로 유지되어야 한다.
 
 #### 수집 이벤트
 - `upload_photo_pack`
 - `apply_recommended_preset`
 - `auto_assign_photo_slots`
 - `change_sample_preset`
-- `open_editor`
 - `view_main_parallax_screen`
 
 #### 완료 기준
@@ -281,6 +282,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 #### 완료 기준
 - 카드 뷰어는 모바일에서 우선적으로 읽기 쉬워야 한다.
 - 공개 카드에서 RSVP, 방명록, 계좌 복사, 길찾기 중 핵심 행동이 실제로 수행 가능해야 한다.
+- `main-parallax-screen` 과 갤러리는 P0에서 항상 렌더 가능 상태여야 한다.
 
 ### 7.4 에디터
 #### 목적
@@ -299,6 +301,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - 예식일시
 - 예식장소
 - D-Day
+- RSVP
 - 방명록
 - 부모님 성함
 - 계좌 섹션
@@ -316,6 +319,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - 현재 적용된 sample preset을 표시해야 한다.
 - 다른 sample preset으로 교체할 수 있어야 한다.
 - 미리보기 데이터와 발행 데이터 구조는 최대한 동일해야 한다.
+- `main-parallax-screen` 과 `gallery` 는 시스템 필수 섹션이라 P0에서 숨김/삭제할 수 없어야 한다.
 
 #### 완료 기준
 - Quick Draft 직후 생성된 기본 섹션을 사용자가 바로 수정할 수 있어야 한다.
@@ -363,6 +367,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - 미리보기와 실제 렌더는 가능한 한 같은 데이터 구조를 사용한다.
 - card 데이터와 sample preset 표현 계층을 분리한다.
 - sample preset 전환 시 사용자 데이터는 유지하고 presentation만 교체한다.
+- 저장 구조는 `presetId`, `presetVersion`, `presetOverrides`를 분리한다.
 - 갤러리 40장 제한은 서버에서도 강제한다.
 - 첫 화면 필수 정보 우선 렌더를 적용한다.
 - 메인 이미지 로딩 안정성을 우선한다.
@@ -390,6 +395,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - `presetId`
 - `presetVersion`
 - `presetSource` (`recommended` | `manual`)
+- `presetOverrides`
 - `groomName`
 - `brideName`
 - `mainImage`
@@ -403,6 +409,7 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - `type`
 - `order`
 - `state` (`default` | `edited` | `hidden`)
+- `isVisible`
 - `payload`
 
 ### 9.3 Sample Preset
@@ -412,9 +419,15 @@ P0에 반드시 포함해야 하는 공개 카드 기능은 아래다.
 - `thumbnailImage`
 - `styleTokens`
 - `defaultCopy`
-- `defaultSectionStates`
+- `defaultSectionRules`
 - `animation`
 - `music`
+
+메모:
+- `sections[]` 는 preset 기본값과 `presetOverrides` 를 합성한 렌더 기준 데이터다.
+- `state=default` 는 preset 기본값을 따르는 상태다.
+- `state=edited` 는 사용자 payload override가 있는 상태다.
+- `state=hidden` 는 사용자 숨김 override가 있는 상태다.
 
 ### 9.4 RSVP Entry
 - `cardId`

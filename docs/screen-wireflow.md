@@ -165,7 +165,7 @@
 - 갤러리
 - 기본 생성 섹션
 - 현재 적용된 sample preset 표시
-- sample preset 전환 UI
+- `3~5개` sample preset 전환 UI
 - 상단 또는 하단의 편집 진입 CTA
 - 발행 CTA
 
@@ -187,6 +187,7 @@
 - 사용자가 초안 품질을 즉시 판단할 수 있다.
 - 사용자가 입력값 재작성 없이 다른 sample preset을 바로 바꿔볼 수 있다.
 - 에디터와 발행으로 바로 이동할 수 있다.
+- RSVP 섹션이 기본 생성되어 노출된 상태로 보인다.
 
 #### 연결 API / 이벤트
 - `GET /api/cards/:cardId/preview`
@@ -225,6 +226,7 @@
 - 사용자가 현재 어떤 섹션을 수정해야 하는지 바로 파악한다.
 - 수정 결과가 미리보기와 같은 데이터 구조로 반영된다.
 - sample preset 변경 후에도 사용자 데이터는 유지되어야 한다.
+- 에디터 최초 진입 시 `open_editor` 이벤트가 1회 기록되어야 한다.
 
 #### 연결 API / 이벤트
 - `GET /api/cards/:cardId/edit`
@@ -264,7 +266,9 @@
 
 #### preset 전환 규칙
 - `edited` 상태 섹션은 sample preset 전환 시 유지된다.
-- `default` 상태 섹션은 새 preset의 기본값으로 바뀔 수 있다.
+- `hidden` 상태 섹션은 사용자 숨김 의도로 유지된다.
+- `default` 상태 섹션은 새 preset의 기본 payload, visibility, order 규칙으로 바뀔 수 있다.
+- `main-parallax-screen` 과 `gallery` 는 숨김 대상이 아니다.
 
 #### 성공 조건
 - 저장 후 즉시 에디터 홈과 미리보기에 반영된다.

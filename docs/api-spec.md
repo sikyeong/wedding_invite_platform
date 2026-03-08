@@ -64,6 +64,12 @@
   "presetId": "preset_clean_editorial",
   "presetVersion": "2026-03-08",
   "presetSource": "recommended",
+  "presetOverrides": {
+    "styleTokens": {},
+    "animation": {},
+    "music": {},
+    "sections": {}
+  },
   "groomName": "민준",
   "brideName": "서연",
   "mainImage": {
@@ -106,6 +112,7 @@
   "type": "gallery",
   "order": 2,
   "state": "default",
+  "isVisible": true,
   "payload": {}
 }
 ```
@@ -123,9 +130,13 @@
 - `story`
 
 `state` 허용값:
-- `default`
-- `edited`
-- `hidden`
+- `default`: preset 기본값을 따르는 상태
+- `edited`: 사용자 payload override가 있는 상태
+- `hidden`: 사용자가 숨김 override를 준 상태
+
+추가 규칙:
+- `isVisible` 는 preset 기본값과 사용자 override를 합성한 최종 렌더 노출 여부다.
+- `sections[]` 는 응답 시점의 resolved render 모델이며, 저장 시에는 `presetOverrides` 와 분리해 관리한다.
 
 ### 3.3 Sample Preset
 ```json
@@ -142,9 +153,15 @@
   "defaultCopy": {
     "intro": "두 사람의 결혼식에 초대합니다"
   },
-  "defaultSectionStates": {
-    "story": "default",
-    "account": "default"
+  "defaultSectionRules": {
+    "story": {
+      "isVisible": true,
+      "order": 8
+    },
+    "account": {
+      "isVisible": false,
+      "order": 7
+    }
   },
   "animation": {
     "hero": "soft-fade"
@@ -192,10 +209,11 @@
 
 ### 4.2 sample preset 규칙
 - Quick Draft 생성 전에 preset 선택은 필수 입력이 아니다.
-- 추천 preset은 자동 적용되지만 사용자는 첫 미리보기 직후 즉시 다른 preset으로 바꿀 수 있어야 한다.
+- 추천 preset은 자동 적용되지만 사용자는 첫 미리보기 직후 `3~5개`의 curated preset 안에서 즉시 다른 preset으로 바꿀 수 있어야 한다.
 - preset 전환 시 `groomName`, `brideName`, `mainImage`, `middleImage`, `galleryImages`, RSVP, 방명록 데이터는 유지되어야 한다.
-- `state`가 `edited`인 section은 preset 전환 시 덮어쓰지 않는다.
-- `state`가 `default`인 section은 preset 기본값으로 교체될 수 있다.
+- `state`가 `default`인 section은 새 preset의 `defaultCopy`, `defaultSectionRules`, style 규칙으로 재계산될 수 있다.
+- `state`가 `edited`이거나 `hidden`인 section은 사용자 override로 유지되어야 한다.
+- `main-parallax-screen` 과 `gallery` 는 system-required section이라 preset 전환 후에도 항상 `isVisible=true` 여야 한다.
 
 ### 4.3 갤러리 제한 정책
 - 41번째 갤러리 이미지 추가 요청은 실패해야 한다.
@@ -297,9 +315,10 @@ Quick Draft를 생성한다.
 - `main-parallax-screen` 생성
 - `gallery` 섹션 생성
 - `middleImage` 자동 할당
-- 기본 섹션 생성
+- RSVP를 포함한 기본 섹션 생성
 - 비공개 미리보기 URL 생성
-- 이벤트 `upload_photo_pack`, `apply_recommended_preset`, `auto_assign_photo_slots`, `open_editor` 기록
+- 첫 미리보기에서 전환 가능한 `3~5개` preset 후보 결정
+- 이벤트 `upload_photo_pack`, `apply_recommended_preset`, `auto_assign_photo_slots` 기록
 
 응답:
 ```json
@@ -326,6 +345,10 @@ Quick Draft를 생성한다.
       {
         "id": "preset_modern_story",
         "name": "Modern Story"
+      },
+      {
+        "id": "preset_photo_bold",
+        "name": "Photo Bold"
       }
     ]
   }
@@ -374,6 +397,10 @@ draft 카드를 소유자 전용으로 조회한다.
       {
         "id": "preset_modern_story",
         "name": "Modern Story"
+      },
+      {
+        "id": "preset_photo_bold",
+        "name": "Photo Bold"
       }
     ]
   }
@@ -451,15 +478,27 @@ draft 카드를 소유자 전용으로 조회한다.
       {
         "id": "preset_modern_story",
         "name": "Modern Story"
+      },
+      {
+        "id": "preset_photo_bold",
+        "name": "Photo Bold"
       }
     ]
   }
 }
 ```
 
+서버 동작:
+- 에디터 최초 진입 시 이벤트 `open_editor` 를 기록해야 한다.
+
 ### 6.6 sample preset 목록 조회 API
 #### GET `/api/presets`
-랜딩과 draft 미리보기에서 사용할 준비된 sample preset 목록을 조회한다.
+랜딩과 draft 미리보기, 에디터에서 사용할 sample preset 목록을 조회한다.
+
+쿼리:
+- `context=landing`: 랜딩 티저용 preset 목록을 조회한다. 최대 3개까지 반환할 수 있다.
+- `context=draft` 또는 `context=editor`: 현재 카드에 전환 가능한 preset 목록을 조회한다. 현재 적용 preset을 포함한 `3~5개`를 반환해야 한다.
+- `cardId`: `context=draft|editor` 에서 추천 범위를 카드 기준으로 좁힐 때 사용한다.
 
 응답:
 ```json
@@ -477,6 +516,12 @@ draft 카드를 소유자 전용으로 조회한다.
         "name": "Modern Story",
         "category": "modern",
         "thumbnailUrl": "https://cdn.example.com/presets/modern-story.jpg"
+      },
+      {
+        "id": "preset_photo_bold",
+        "name": "Photo Bold",
+        "category": "photo-first",
+        "thumbnailUrl": "https://cdn.example.com/presets/photo-bold.jpg"
       }
     ]
   }
@@ -500,8 +545,10 @@ draft 카드에 적용된 sample preset을 변경한다.
 서버 동작:
 - 적용 가능한 preset인지 검증
 - `presetId`, `presetVersion`, `presetSource` 갱신
-- `state`가 `default`인 section payload는 새 preset 기본값으로 갱신
-- `state`가 `edited`인 section payload는 유지
+- `state`가 `default`인 section은 새 preset의 기본 payload, `isVisible`, order 규칙으로 재계산
+- `state`가 `edited`인 section payload override는 유지
+- `state`가 `hidden`인 section visibility override는 유지
+- `main-parallax-screen` 과 `gallery` 는 항상 `isVisible=true` 로 강제
 - 이벤트 `change_sample_preset` 기록
 
 응답:
@@ -586,6 +633,7 @@ draft 카드에 적용된 sample preset을 변경한다.
       "type": "wedding-date",
       "order": 3,
       "state": "edited",
+      "isVisible": true,
       "payload": {
         "date": "2026-10-03",
         "time": "13:00",
@@ -597,6 +645,7 @@ draft 카드에 적용된 sample preset을 변경한다.
       "type": "account",
       "order": 7,
       "state": "hidden",
+      "isVisible": false,
       "payload": {
         "accounts": []
       }
@@ -607,7 +656,10 @@ draft 카드에 적용된 sample preset을 변경한다.
 
 규칙:
 - 미리보기와 발행 렌더는 동일한 `sections` 구조를 사용한다.
-- `main-parallax-screen`과 `gallery`는 P0에서 삭제 불가, 숨김 금지로 두는 것을 권장한다.
+- `state=default` 는 해당 section의 사용자 override를 제거하고 preset 기본값으로 되돌리는 의미다.
+- `state=edited` 는 payload override를 `presetOverrides.sections` 에 저장하는 의미다.
+- `state=hidden` 는 숨김 override를 `presetOverrides.sections` 에 저장하는 의미다.
+- `main-parallax-screen`과 `gallery`는 P0에서 삭제 불가이며 숨김도 불가하다.
 
 ### 6.11 카드 발행 API
 #### POST `/api/cards/:cardId/publish`
@@ -766,7 +818,9 @@ draft 카드를 published 상태로 전환한다.
   "data": {
     "stats": {
       "viewMainParallaxScreen": 120,
+      "applyRecommendedPreset": 1,
       "changeSamplePreset": 6,
+      "keptRecommendedPreset": false,
       "submitRsvp": 18,
       "writeGuestbook": 9,
       "copyAccount": 14
@@ -826,6 +880,8 @@ draft 카드를 published 상태로 전환한다.
 - `POST /api/cards` 한 번으로 draft 카드와 추천 preset, 기본 섹션이 준비되어야 한다.
 - 중간 사진 미입력 시 서버가 자동 배정해야 한다.
 - 추천 preset이 적용되어도 사용자는 입력값 재작성 없이 preset을 바꿀 수 있어야 한다.
+- Quick Draft 직후 RSVP 섹션이 기본 생성되고 기본 노출되어야 한다.
+- draft 미리보기 응답에는 현재 preset을 포함한 `3~5개`의 전환 가능 preset이 포함되어야 한다.
 
 ### 8.2 공개 카드
 - 공개 카드 조회는 slug 기준으로 가능해야 한다.
@@ -838,6 +894,8 @@ draft 카드를 published 상태로 전환한다.
 - 발행 후 즉시 공개 URL 조회가 가능해야 한다.
 - 갤러리 40장 제한은 생성과 수정 모두에서 동일하게 강제되어야 한다.
 - preset 전환 시 사용자 데이터가 손실되면 안 된다.
+- `main-parallax-screen` 과 `gallery` 는 편집 API로 숨길 수 없어야 한다.
+- `edited` 와 `hidden` 상태는 `presetOverrides` 로 유지되고, `default` 상태만 새 preset 기본값을 따라야 한다.
 
 ## 9. 권장 구현 순서
 1. 이미지 업로드 API

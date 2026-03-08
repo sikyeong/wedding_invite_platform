@@ -6,6 +6,7 @@
 - `docs/core-feature-spec.md`
 - `docs/api-spec.md`
 - `docs/screen-wireflow.md`
+- `docs/branch-ticket-map.md`
 
 ## 1. 문서 목적
 이 문서는 P0 범위를 실제 구현 티켓 단위로 분해한 작업 목록이다.
@@ -66,6 +67,7 @@
 - 범위:
 - 앱 라우트 또는 페이지 구조 초안
 - `Card`, `Section`, `Preset`, `RSVP`, `Guestbook` 공통 타입 정의
+- `PresetOverride` 공통 타입 정의
 - draft / published 상태 enum 정의
 - `recommended` / `manual` preset source enum 정의
 - 공통 API 응답 타입 정의
@@ -82,6 +84,7 @@
 - 공통 타입이 이후 API 및 화면 구현에 재사용 가능해야 한다.
 - draft / published 상태가 타입 수준에서 구분되어야 한다.
 - card 데이터와 preset 표현 데이터가 타입 수준에서 분리되어야 한다.
+- `sections` resolved 모델과 `presetOverrides` 저장 모델이 분리되어야 한다.
 
 ### T-002 이미지 업로드 파이프라인 초안
 - 상태: `todo`
@@ -172,9 +175,11 @@
 - 갤러리 최소 / 최대 검증
 - `ownerToken` 생성
 - `presetId`, `presetVersion`, `presetSource` 결정
+- `presetOverrides` 초기화
 - 추천 preset 자동 선택
 - preset 기본 레이아웃 / 기본 카피 / 기본 섹션 상태 적용
 - `main-parallax-screen`, `gallery`, 기본 섹션 자동 생성
+- RSVP 기본 생성 및 기본 노출
 - 중간 사진 자동 할당
 - preview URL, editor URL 반환
 - 제외:
@@ -193,6 +198,7 @@
 - 응답에 `ownerToken`, `previewUrl`, `editorUrl`이 포함되어야 한다.
 - 응답에 적용된 preset 정보가 포함되어야 한다.
 - 서버에서도 갤러리 40장 제한을 강제해야 한다.
+- 추천 preset 포함 `3~5개` 전환 후보가 함께 결정되어야 한다.
 
 ### T-006 draft 미리보기 및 sample preset 전환 구현
 - 상태: `todo`
@@ -223,7 +229,8 @@
 - 소유자 token 없이 접근하면 실패해야 한다.
 - 첫 화면에서 사진과 이름이 자연스럽게 보여야 한다.
 - 입력값 재작성 없이 sample preset을 바꿔볼 수 있어야 한다.
-- preset 전환 시 `edited` 상태가 아닌 기본 섹션만 새 기본값으로 갱신되어야 한다.
+- preset 전환 시 `default` 상태 섹션만 새 기본 payload / visibility / order 규칙으로 갱신되어야 한다.
+- preset 전환 시 `edited` 와 `hidden` 상태는 유지되어야 한다.
 
 ### T-007 갤러리 섹션 및 확대 모달 구현
 - 상태: `todo`
@@ -324,6 +331,8 @@
 - 인터뷰/스토리 편집
 - 섹션 숨김
 - 섹션 순서 변경
+- `main-parallax-screen`, `gallery` 숨김 금지
+- `presetOverrides` 저장 규칙 반영
 - preset 전환 시 `default` / `edited` 섹션 처리 규칙 반영
 - 제외:
 - 고급 드래그앤드롭 애니메이션
@@ -340,6 +349,8 @@
 - 순서 변경 결과가 미리보기와 공개 카드에 동일하게 반영되어야 한다.
 - 숨김 처리된 섹션은 렌더되지 않아야 한다.
 - sample preset 변경 시 `edited` 섹션은 유지되고 `default` 섹션은 새 기본값을 적용할 수 있어야 한다.
+- `hidden` 상태는 sample preset 변경 후에도 유지되어야 한다.
+- `main-parallax-screen`, `gallery` 는 숨김 처리할 수 없어야 한다.
 
 ### T-011 발행 및 공유 기본 구현
 - 상태: `todo`
