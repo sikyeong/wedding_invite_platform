@@ -1,0 +1,164 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+.page {
+  margin: 0 auto;
+  max-width: 1100px;
+  padding: 32px 16px 56px;
+}
+
+.page h1 {
+  font-size: 28px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+
+.page p {
+  color: #5f6064;
+  margin: 0 0 20px;
+}
+
+.thumb-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.thumb {
+  appearance: none;
+  background: #fff;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+
+.thumb img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.zoom-modal {
+  background: #fff;
+  bottom: 0;
+  display: none;
+  height: 100%;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 100%;
+  z-index: 500;
+}
+
+.zoom-modal.open {
+  animation: fade-in 0.28s ease;
+  display: block;
+}
+
+.zoom-modal .inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+.zoom-modal .head {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+.zoom-modal .close {
+  align-items: center;
+  background: hsla(0, 0%, 100%, 0.7);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  padding: 6px;
+}
+
+.zoom-modal .close svg {
+  height: 20px;
+  width: 20px;
+}
+
+.zoom-modal .image-container {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  width: 100%;
+}
+
+.zoom-modal .image-container img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.zoom-modal .func-wrap {
+  align-items: center;
+  background: hsla(0, 0%, 100%, 0.72);
+  border-radius: 12px;
+  bottom: 20px;
+  color: #1a1a1a;
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  justify-content: center;
+  left: 50%;
+  padding: 8px 12px;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.zoom-modal .count {
+  display: flex;
+  gap: 4px;
+}
+
+.zoom-modal .nav-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+@media (min-width: 768px) {
+  .thumb-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
